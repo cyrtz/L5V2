@@ -5,7 +5,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/index.py": {
-      "excludeFiles": "{tests/**,src/**,dist/**,node_modules/**,*.md,.github/**}"
+      "excludeFiles": "{tests/**,src/**,dist/**,node_modules/**,*.md,.github/**,**/__pycache__/**,**/tests/**,**/test_*.py,**/*.pyi,**/scipy/io/**,**/scipy/signal/**,**/scipy/ndimage/**,**/scipy/fft/**,**/scipy/constants.py,**/scipy/datasets/**,**/scipy/misc.py}"
     }
   },
   "rewrites": [

@@ -149,6 +149,18 @@ def run_analysis(rows, target, method='all', feature_count=2):
         coeff = [{'feature': name, 'coefficient': safe_number(c)} for name, c in zip(encoded, coef) if abs(c) > 1e-9]
     else: coeff = [{'feature': name, 'coefficient': safe_number(c)} for name, c in zip(chosen, coef)]
     mae = mean_absolute_error(y_test, pred); mse = mean_squared_error(y_test, pred)
+    r2_val = r2_score(y_test, pred)
+    n_test = len(y_test); p_feat = len(chosen)
+    adj_r2 = safe_number(1 - (1 - r2_val) * (n_test - 1) / (n_test - p_feat - 1)) if n_test > p_feat + 1 else None
+    f_stat_val = f_pvalue = None
+    if p_feat > 0 and n_test > p_feat + 1 and r2_val < 1.0:
+        raw_f = (r2_val / p_feat) / ((1 - r2_val) / (n_test - p_feat - 1))
+        f_stat_val = safe_number(raw_f)
+        try:
+            from scipy.stats import f as _f_dist
+            f_pvalue = safe_number(float(1 - _f_dist.cdf(raw_f, p_feat, n_test - p_feat - 1)))
+        except Exception:
+            pass
     cv_error = None; cv_scores = []
     try:
         cv_scores = cross_val_score(pipeline, X_train, y_train, cv=folds, scoring='neg_mean_absolute_error').tolist()
@@ -175,7 +187,8 @@ def run_analysis(rows, target, method='all', feature_count=2):
     return {'rows': len(X), 'dropped': dropped, 'target': target, 'numeric': numeric, 'categorical': categoric,
         'methods': method, 'feature_count': len(chosen),
         'metrics': {'mae': safe_number(mae), 'mse': safe_number(mse),
-        'rmse': safe_number(np.sqrt(mse)), 'r2': safe_number(r2_score(y_test, pred)),
+        'rmse': safe_number(np.sqrt(mse)), 'r2': safe_number(r2_val),
+        'adj_r2': adj_r2, 'f_stat': f_stat_val, 'f_pvalue': f_pvalue,
         'cv_mae': safe_number(np.mean(cv_scores)) if cv_scores else None,
         'cv_std': safe_number(np.std(cv_scores)) if cv_scores else None},
         'cross_validation_error': cv_error, 'model': model_info, 'points': points,

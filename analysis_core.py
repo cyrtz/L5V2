@@ -63,7 +63,8 @@ def prepare(rows, target):
     if not numeric and not categoric: raise ValueError('找不到可用特徵。')
     all_cols = numeric + categoric
     n_num = len(numeric)
-    X = np.empty((len(rows_clean), len(all_cols)), dtype=object)
+    n_rows = len(rows_clean)
+    X = np.empty((n_rows, len(all_cols)), dtype=object)
     for j in range(n_num):
         c = numeric[j]
         for i, row in enumerate(rows_clean):
@@ -93,9 +94,14 @@ def build(numeric, categoric, method, k, folds):
     n_cat = len(categoric)
     numeric_idx = list(range(n_num))
     categoric_idx = list(range(n_num, n_num + n_cat))
+    from sklearn.preprocessing import FunctionTransformer
+    _cast_f64 = FunctionTransformer(lambda a: a.astype(np.float64))
     trans = []
     if numeric_idx:
-        trans.append(('num', Pipeline([('impute', SimpleImputer(strategy='median'))]), numeric_idx))
+        trans.append(('num', Pipeline([
+            ('cast', _cast_f64),
+            ('impute', SimpleImputer(strategy='median'))
+        ]), numeric_idx))
     if categoric_idx:
         trans.append(('cat', Pipeline([
             ('impute', SimpleImputer(strategy='most_frequent')),

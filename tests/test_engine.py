@@ -21,10 +21,12 @@ def test_compare():
     assert result['winner_cv'] in ['all','f_test','mutual_info','forward','backward','rfe','rfecv','lasso']
 
 def test_feature_count_trends():
-    import pandas as pd
+    import csv
     from analysis_core import feature_count_trends
     from pathlib import Path
-    rows = pd.read_csv(Path(__file__).parents[1] / 'public' / '50_Startups.csv').to_dict(orient='records')
+    csv_path = Path(__file__).parents[1] / 'public' / '50_Startups.csv'
+    with open(csv_path, newline='', encoding='utf-8') as f:
+        rows = list(csv.DictReader(f))
     result = feature_count_trends(rows, 'Profit')
     assert result['max_features'] == 5
     assert len(result['curves']) == 5
